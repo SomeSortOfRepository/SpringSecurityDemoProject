@@ -1,10 +1,7 @@
 package ru.dolinini.springsecuritydemoproject.restController;
 
 import lombok.Getter;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.dolinini.springsecuritydemoproject.model.Person;
 
 import java.util.ArrayList;
@@ -35,6 +32,22 @@ public class PersonRestController {
                           .findFirst()
                           .orElseThrow();
     }
+    @PostMapping
+    public Person create(@RequestBody Person person){
+        if(personsList.stream().anyMatch(p->p.getId().equals(person.getId()))) {
+            throw new RuntimeException("Such person already exists");
+        }
+        else {
+            personsList.add(person);
+        }
+        return person;
+    }
+    @DeleteMapping("/{id}")
+    public void removePerson(@PathVariable(name = "id") Long id){
+        personsList.removeIf(person->person.getId().equals(id));
+    }
+
+
 
 
 }
