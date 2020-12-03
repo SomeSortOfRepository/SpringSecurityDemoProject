@@ -1,10 +1,12 @@
 package ru.dolinini.springsecuritydemoproject.restController;
 
-import lombok.Getter;
+
+
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.dolinini.springsecuritydemoproject.model.Person;
 
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,7 +27,8 @@ public class PersonRestController {
     }
 
     @GetMapping("/{id}")
-    public Person getById(@PathVariable(name="id") Long id) {
+    @PreAuthorize("hasAuthority('permission:read')")
+    public Person getPersonById(@PathVariable(name="id") Long id) {
 
         return personsList.stream()
                           .filter(person->person.getId().equals(id))
@@ -33,7 +36,8 @@ public class PersonRestController {
                           .orElseThrow();
     }
     @PostMapping
-    public Person create(@RequestBody Person person){
+    @PreAuthorize("hasAuthority('permission:write')")
+    public Person createAndAddNewPerson(@RequestBody Person person){
         if(personsList.stream().anyMatch(p->p.getId().equals(person.getId()))) {
             throw new RuntimeException("Such person already exists");
         }
@@ -43,7 +47,8 @@ public class PersonRestController {
         return person;
     }
     @DeleteMapping("/{id}")
-    public void removePerson(@PathVariable(name = "id") Long id){
+    @PreAuthorize("hasAuthority('permission:write')")
+    public void removePersonById(@PathVariable(name = "id") Long id){
         personsList.removeIf(person->person.getId().equals(id));
     }
 

@@ -3,6 +3,7 @@ package ru.dolinini.springsecuritydemoproject.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -11,10 +12,13 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import ru.dolinini.springsecuritydemoproject.model.Permission;
 import ru.dolinini.springsecuritydemoproject.model.Role;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled=true)
 public class SpringSecurityConf  extends WebSecurityConfigurerAdapter {
 
     @Override
@@ -23,15 +27,19 @@ public class SpringSecurityConf  extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/").permitAll()
-                .antMatchers(HttpMethod.GET,"/api/**").hasAnyRole(Role.USER.name(), Role.ADMIN.name())
-                .antMatchers(HttpMethod.POST, "/api/**").hasRole(Role.ADMIN.name())
-                .antMatchers(HttpMethod.DELETE,"/api/**").hasRole(Role.ADMIN.name())
                 .anyRequest()
                 .authenticated()
                 .and()
-                .httpBasic()
+                .formLogin()
+                .loginPage("/auth/login").permitAll()
+                .defaultSuccessUrl("/auth/success")
                 .and()
-                .formLogin();
+                .logout()
+                .logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout", "POST"))
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
+                .logoutSuccessUrl("/auth/login");
 
 
 
@@ -43,13 +51,13 @@ public class SpringSecurityConf  extends WebSecurityConfigurerAdapter {
                                 User.builder()
                                     .username("admin")
                                     .password(passwordEncoder().encode("12345"))
-                                    .roles(Role.ADMIN.name())
+                                    .authorities(Role.ADMIN.getAuthorities())
                                     .build(),
 
                                 User.builder()
                                     .username("user")
                                     .password(passwordEncoder().encode("1234"))
-                                    .roles(Role.USER.name())
+                                    .authorities(Role.USER.getAuthorities())
                                     .build()
         );
     }
